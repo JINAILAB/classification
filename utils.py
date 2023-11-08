@@ -9,14 +9,13 @@ from typing import List, Optional, Tuple
 
 import torch
 import torch.distributed as dist
-
-
+import logging
 class SmoothedValue:
     """Track a series of values and provide access to smoothed values over a
     window or the global series average.
     """
 
-    def __init__(self, window_size=20, fmt=None):
+    def __init__(self, window_size=None, fmt=None):
         if fmt is None:
             fmt = "{median:.4f} ({global_avg:.4f})"
         self.deque = deque(maxlen=window_size)
@@ -98,7 +97,7 @@ class MetricLogger:
     def add_meter(self, name, meter):
         self.meters[name] = meter
 
-    def log_every(self, iterable, print_freq, header=None):
+    def log_every(self, iterable, print_freq, logger, header=None):
         i = 0
         if not header:
             header = ""
@@ -132,7 +131,7 @@ class MetricLogger:
                 eta_seconds = iter_time.global_avg * (len(iterable) - i)
                 eta_string = str(datetime.timedelta(seconds=int(eta_seconds)))
                 if torch.cuda.is_available():
-                    print(
+                    logger.debug(
                         log_msg.format(
                             i,
                             len(iterable),
@@ -144,7 +143,7 @@ class MetricLogger:
                         )
                     )
                 else:
-                    print(
+                    logger.debug(
                         log_msg.format(
                             i, len(iterable), eta=eta_string, meters=str(self), time=str(iter_time), data=str(data_time)
                         )
@@ -153,7 +152,7 @@ class MetricLogger:
             end = time.time()
         total_time = time.time() - start_time
         total_time_str = str(datetime.timedelta(seconds=int(total_time)))
-        print(f"{header} Total time: {total_time_str}")
+        logger.debug(f"{header} Total time: {total_time_str}")
 
 
 class ExponentialMovingAverage(torch.optim.swa_utils.AveragedModel):
@@ -211,6 +210,8 @@ def setup_for_distributed(is_master):
             builtin_print(*args, **kwargs)
 
     __builtin__.print = print
+    
+    
 
 
 def is_dist_avail_and_initialized():
@@ -242,7 +243,7 @@ def save_on_master(*args, **kwargs):
         torch.save(*args, **kwargs)
 
 
-def init_distributed_mode(args):
+def init_distributed_mode(args, logger):
     if "RANK" in os.environ and "WORLD_SIZE" in os.environ:
         args.rank = int(os.environ["RANK"])
         args.world_size = int(os.environ["WORLD_SIZE"])
@@ -261,7 +262,7 @@ def init_distributed_mode(args):
 
     torch.cuda.set_device(args.gpu)
     args.dist_backend = "nccl"
-    print(f"| distributed init (rank {args.rank}): {args.dist_url}", flush=True)
+    logger.debug(f"| distributed init (rank {args.rank}): {args.dist_url}", flush=True)
     torch.distributed.init_process_group(
         backend=args.dist_backend, init_method=args.dist_url, world_size=args.world_size, rank=args.rank
     )
@@ -463,3 +464,39 @@ def set_weight_decay(
         if len(params[key]) > 0:
             param_groups.append({"params": params[key], "weight_decay": params_weight_decay[key]})
     return param_groups
+
+
+
+def setting_logger(file_name : str):
+    """
+    주어진 파일 이름을 사용하여 로거를 설정하고 반환합니다.
+    
+    로그 메시지는 주어진 파일과 콘솔에 동시에 기록됩니다. 파일 로그에는 메시지의 발생 시간이 포함되며, 
+    콘솔 로그에는 메시지의 로그 레벨과 내용만 포함됩니다.
+    
+    Args:
+        file_name (str): 로그 메시지를 저장할 파일의 이름
+
+    Returns:
+        logging.Logger: 설정된 로거 객체.
+    """
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+
+    # 파일 핸들러 생성 및 설정
+    file_handler = logging.FileHandler(file_name)
+    file_handler.setLevel(logging.INFO) # file에는 출력되는 값보다 더 적게 기록
+    file_format = logging.Formatter('%(asctime)s - %(message)s', 
+                                    datefmt='%Y-%m-%d %H:%M:%S')
+    file_handler.setFormatter(file_format)
+    logger.addHandler(file_handler)
+
+    # 콘솔 핸들러 생성 및 설정
+    stream_handler = logging.StreamHandler()
+    stream_format = logging.Formatter('%(levelname)s: %(message)s', 
+                                    datefmt='%Y-%m-%d %H:%M:%S')
+    stream_handler.setFormatter(stream_format)
+    logger.addHandler(stream_handler)
+    
+    return logger
+

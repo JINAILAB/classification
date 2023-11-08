@@ -1,0 +1,234 @@
+data_path:
+  default: /datasets01/imagenet_full_size/061417/
+  type: str
+  help: 데이터셋 경로
+  input: /datasets01/imagenet_full_size/061417/
+model:
+  default: resnet18
+  type: str
+  help: 모델 이름
+  input: resnet18
+device:
+  default: cuda
+  type: str
+  help: '장치 (cuda 또는 cpu 사용. 기본값: cuda)'
+  input: cuda
+batch_size:
+  default: 32
+  type: int
+  help: 각 GPU당 이미지 수, 총 배치 크기는 $NGPU x batch_size
+  input: 32
+epochs:
+  default: 90
+  type: int
+  help: 실행할 전체 에폭 수
+  input: 90
+workers:
+  default: 16
+  type: int
+  help: '데이터 로딩 워커 수 (기본값: 16)'
+  input: 16
+opt:
+  default: sgd
+  type: str
+  help: 옵티마이저
+  input: sgd
+lr:
+  default: 0.1
+  type: float
+  help: 초기 학습률
+  input: 0.1
+momentum:
+  default: 0.9
+  type: float
+  help: 모멘텀
+  input: 0.9
+weight_decay:
+  default: 0.0001
+  type: float
+  help: '가중치 감소 (기본값: 1e-4)'
+  input: 0.0001
+norm_weight_decay:
+  default: null
+  type: float
+  help: '정규화 계층의 가중치 감소 (기본값: None, --wd와 같은 값)'
+  input: null
+bias_weight_decay:
+  default: null
+  type: float
+  help: '모든 계층의 편향 매개변수에 대한 가중치 감소 (기본값: None, --wd와 같은 값)'
+  input: null
+transformer_embedding_decay:
+  default: null
+  type: float
+  help: '비전 변환기 모델의 임베딩 매개변수에 대한 가중치 감소 (기본값: None, --wd와 같은 값)'
+  input: null
+label_smoothing:
+  default: 0.0
+  type: float
+  help: '레이블 평활화 (기본값: 0.0)'
+  input: 0.0
+mixup_alpha:
+  default: 0.0
+  type: float
+  help: '믹스업 알파 (기본값: 0.0)'
+  input: 0.0
+cutmix_alpha:
+  default: 0.0
+  type: float
+  help: '컷믹스 알파 (기본값: 0.0)'
+  input: 0.0
+lr_scheduler:
+  default: steplr
+  type: str
+  help: '학습률 스케줄러 (기본값: steplr)'
+  input: steplr
+lr_warmup_epochs:
+  default: 0
+  type: int
+  help: '워밍업할 에폭 수 (기본값: 0)'
+  input: 0
+lr_warmup_method:
+  default: constant
+  type: str
+  help: '워밍업 방법 (기본값: constant)'
+  input: constant
+lr_warmup_decay:
+  default: 0.01
+  type: float
+  help: 학습률 감소
+  input: 0.01
+lr_step_size:
+  default: 30
+  type: int
+  help: 지정된 에폭마다 학습률 감소
+  input: 30
+lr_gamma:
+  default: 0.1
+  type: float
+  help: 학습률 감마로 학습률 감소
+  input: 0.1
+lr_min:
+  default: 0.0
+  type: float
+  help: '스케줄의 최소 학습률 (기본값: 0.0)'
+  input: 0.0
+print_freq:
+  default: 10
+  type: int
+  help: 출력 빈도
+  input: 10
+output_dir:
+  default: ./log_all
+  type: str
+  help: 출력을 저장할 경로
+  input: ./log_all
+resume:
+  default: ''
+  type: str
+  help: 체크포인트 경로
+  input: ''
+start_epoch:
+  default: 0
+  type: int
+  help: 시작 에폭
+  input: 0
+cache_dataset:
+  default: false
+  type: bool
+  help: 데이터셋 캐싱으로 초기화를 빠르게 함. 변환도 직렬화됨
+  input: false
+sync_bn:
+  default: false
+  type: bool
+  help: 배치 정규화를 동기화해서 사용할지 여부
+test_only:
+  default: false
+  type: bool
+  help: 모델을 오직 테스트 모드로만 실행할지 여부
+auto_augment:
+  default: null
+  type: str
+  help: 'auto augment 사용 (default: None)'
+ra_magnitude:
+  default: 9
+  type: int
+  help: 자동 증강 정책의 강도
+augmix_severity:
+  default: 3
+  type: int
+  help: AugMix 정책의 심각성
+random_erase:
+  default: 0.0
+  type: float
+  help: 'random erasing probability (default: 0.0)'
+amp:
+  default: false
+  type: bool
+  help: Use torch.cuda.amp for mixed precision training
+world_size:
+  default: 1
+  type: int
+  help: number of distributed processes
+dist_url:
+  default: env://
+  type: str
+  help: url used to set up distributed training
+model_ema:
+  default: false
+  type: bool
+  help: enable tracking Exponential Moving Average of model parameters
+model_ema_steps:
+  default: 32
+  type: int
+  help: 'the number of iterations that controls how often to update the EMA model
+    (default: 32)'
+model_ema_decay:
+  default: 0.99998
+  type: float
+  help: 'decay factor for Exponential Moving Average of model parameters (default:
+    0.99998)'
+use_deterministic_algorithms:
+  default: false
+  type: bool
+  help: Forces the use of deterministic algorithms only.
+interpolation:
+  default: bilinear
+  type: str
+  help: 'the interpolation method (default: bilinear)'
+val_resize_size:
+  default: 256
+  type: int
+  help: 'the resize size used for validation (default: 256)'
+val_crop_size:
+  default: 224
+  type: int
+  help: 'the central crop size used for validation (default: 224)'
+train_crop_size:
+  default: 224
+  type: int
+  help: 'the random crop size used for training (default: 224)'
+clip_grad_norm:
+  default: null
+  type: float
+  help: the maximum gradient norm (default None)
+ra_sampler:
+  default: false
+  type: bool
+  help: whether to use Repeated Augmentation in training
+ra_reps:
+  default: 3
+  type: int
+  help: 'number of repetitions for Repeated Augmentation (default: 3)'
+weights:
+  default: null
+  type: str
+  help: the weights enum name to load
+backend:
+  default: PIL
+  type: str
+  help: PIL or tensor - case insensitive
+use_v2:
+  default: false
+  type: bool
+  help: Use V2 transforms
